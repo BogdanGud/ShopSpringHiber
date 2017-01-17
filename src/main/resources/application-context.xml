@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd"
+       default-autowire="byName">
+
+    <tx:annotation-driven/>
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- This makes /META-INF/persistence.xml is no longer necessary -->
+        <property name="packagesToScan" value="com.andersen.shop.model"/>
+        <!-- JpaVendorAdapter implementation for Hibernate EntityManager.
+             Exposes Hibernate's persistence provider and EntityManager extension interface -->
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQL95Dialect</prop>
+                <prop key="hibernate.enable_lazy_load_no_trans">true</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="em" class="org.springframework.orm.jpa.support.SharedEntityManagerBean">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="url" value="jdbc:postgresql://localhost:5432/shop"/>
+        <property name="username" value="postgres"/>
+        <property name="password" value="Qwerty1"/>
+
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <bean class="com.andersen.shop.dao.ProductDao" id="productDao">
+        <property name="em" ref="em"/>
+    </bean>
+    <bean class="com.andersen.shop.service.ProductService" id="productService">
+        <property name="productDao" ref="productDao"/>
+    </bean>
+    <bean class="com.andersen.shop.controller.ConsoleController" id="consoleController">
+        <property name="productService" ref="productService"/>
+        <property name="customerService" ref="customerService"/>
+        <property name="bookingService" ref="bookingService"/>
+    </bean>
+    <bean id="customerDao" class="com.andersen.shop.dao.CustomerDao">
+        <property name="em" ref="em"/>
+    </bean>
+    <bean id="customerService" class="com.andersen.shop.service.CustomerService">
+        <property name="customerDao" ref="customerDao"/>
+    </bean>
+    <bean id="bookingDao" class="com.andersen.shop.dao.BookingDao">
+        <property name="em" ref="em"/>
+    </bean>
+    <bean id="bookingService" class="com.andersen.shop.service.BookingService">
+        <property name="bookingDao" ref="bookingDao"/>
+        <property name="customerDao" ref="customerDao"/>
+        <property name="productDao" ref="productDao"/>
+    </bean>
+
+
+</beans>
